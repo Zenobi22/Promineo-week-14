@@ -1,65 +1,86 @@
 import React, {useEffect, useState} from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
-import MovieList from './components/movieList';
+import MovieList from './components/MovieList';
 import MovieListHeading from './components/MovieListHeading';
 import SearchBox from './components/SearchBox';
-import AddFavourite from './components/AddFavourites';
+import AddFavorites from './components/AddFavorites';
+import RemoveFavorites from './components/RemoveFavorites';
 
-const App = () => {
-  const [movies, setMovies] = useState([]);
-  const [favourites, setFavourites] = useState([]);
+const App =() => {
+  const [movies, setMovies] = useState ([]);
+  const [favorites, setFavorites] = useState ([]);
   const [searchValue, setSearchValue] = useState('');
-    
-  const getMovieRequest = async (searchValue) => {
-    const url =`http://www.omdbapi.com/?s=${searchValue}&apikey=515176c`;
 
-    const response = await fetch(url);
-    const responseJson = await response.json();
+const getMovieRequest = async (searchValue) => {
+  const url =`http://www.omdbapi.com/?s=${searchValue}&apikey=515176c`;
 
-   if (responseJson.Search) {
-     setMovies(responseJson.Search);
-   }
-   
-  };
+  const response =await fetch(url);
+  const responseJson = await response.json();
 
-  useEffect(() => {
-    getMovieRequest(searchValue);
-  }, [searchValue]);
-
-  const addFavouriteMovie = (movie) => {
-    const newFavouriteList = [...favourites, movie];
-    setFavourites(newFavouriteList);
+  if (responseJson.Search) {
+    setMovies(responseJson.Search);
   }
+};
 
-  return (
+useEffect(() => {
+  getMovieRequest(searchValue);
+}, [searchValue]);
 
-    <div className='container-fluid movie-app'>
-    <div className ='row d-flex align-items-center mt-4'>
-      <MovieListHeading heading='Movie Binge'/>
-      <SearchBox searchValue={searchValue}  setSearchValue={setSearchValue} />
-    </div>
+useEffect(() => {
+  const movieFavorites =JSON.parse(localStorage.getItem('react-movie-app-favorites')
+  );
 
-     <div className='row'>
-       <MovieList
-        movies={movies} 
-        handleFavouritesClick={addFavouriteMovie} 
-        favoriteComponent={AddFavourite} 
-       />
-     </div>
-      <div className='row d-flex align-items-center mt-4 mb-4'>
-           <MovieListHeading headin='Favourites' />
-      </div>
-      <div className='row'>
-       <MovieList
-        movies={favourites} 
-        handleFavouritesClick={addFavouriteMovie} 
-        favoriteComponent={AddFavourite} 
+  setFavorites(movieFavorites);
+}, []);
+
+const saveToLocalStorage = (items) => {
+  localStorage.setItem('react-movie-app-favorites',JSON.stringify(items))
+}; // created a storage area so favorites will save after closing browser.
+
+const addFavoriteMovie = (movie) => {
+  const newFavoriteList = [...favorites, movie];
+  setFavorites(newFavoriteList);
+  saveToLocalStorage(newFavoriteList); // will save your favorite list in local storage.
+};
+
+const removeFavoritesMovie = (movie) => {
+  const newFavoriteList = favorites.filter(
+    (favorite) => favorite.imdbID !== movie.imdbID
+  );
+
+  setFavorites(newFavoriteList);
+  saveToLocalStorage(newFavoriteList);
+};
+
+ return (
+  <div className='container-fluid movie-app'>
+   <div className='row d-flex align-items-center mt-4 mb-4'>
+     <MovieListHeading heading='Movie Binge'/>
+     <SearchBox  searchValue={searchValue} setSearchValue={setSearchValue}/>
+   </div>
+
+   <div className='row'>
+     <MovieList 
+        movies={movies}
+        handleFavoritesClick={addFavoriteMovie}
+        favoriteComponent={AddFavorites}
       />
-      </div>
-    </div>
-  )
+   </div>
+   <div className='row d-flex align-items-center mt-4 mb-4'>
+     <MovieListHeading heading='Favorites'/>
+   </div>
+
+   <div className='row d-flex align-items-center mt-2'>
+   <MovieList 
+      movies={favorites}
+      handleFavoritesClick={removeFavoritesMovie}
+      favoriteComponent={RemoveFavorites}
+    />
+ </div>
+ </div>
+
+  );
 };
 
 export default App;
-  
